@@ -41,25 +41,15 @@ async def login(
     password = None
 
     # 1. Try parsing JSON body
-    content_type = request.headers.get("content-type", "")
-    if "application/json" in content_type:
-        try:
-            body = await request.json()
+    try:
+        body = await request.json()
+        if isinstance(body, dict):
             username = body.get("username") or body.get("email")
             password = body.get("password")
-        except Exception:
-            pass
+    except BaseException:
+        pass
 
-    # 2. Try parsing Form Data / URL-encoded body if JSON didn't yield credentials
-    if not username or not password:
-        try:
-            form = await request.form()
-            username = form.get("username") or form.get("email")
-            password = form.get("password")
-        except Exception:
-            pass
-
-    # 3. Fallback: Parse raw body string if needed
+    # 2. Fallback: Parse raw URL-encoded query string from body bytes
     if not username or not password:
         try:
             raw_bytes = await request.body()
@@ -72,7 +62,7 @@ async def login(
                 username = parsed_form["email"][0]
             if "password" in parsed_form:
                 password = parsed_form["password"][0]
-        except Exception:
+        except BaseException:
             pass
 
     if not username or not password:
