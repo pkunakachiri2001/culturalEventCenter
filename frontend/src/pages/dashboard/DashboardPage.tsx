@@ -108,7 +108,7 @@ export default function DashboardPage() {
             <LayoutDashboard className="w-6 h-6 text-teal-400" />
             Dashboard Overview
           </h1>
-          <p className="page-subtitle">Real-time operational summary & metrics for CultureFlow.</p>
+          <p className="page-subtitle">Real-time operational summary & metrics for Nyatsime Heritage.</p>
         </div>
 
         <div className="flex items-center gap-3">

@@ -476,7 +476,7 @@ export default function VisitorsPage() {
                     CF
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-base leading-none">CultureFlow</h3>
+                    <h3 className="font-bold text-white text-base leading-none">Nyatsime Heritage</h3>
                     <p className="text-[10px] text-teal-400">Cultural Centre Admission Pass</p>
                   </div>
                 </div>

@@ -99,7 +99,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         </div>
         {!collapsed && (
           <div className="animate-fade-in overflow-hidden">
-            <p className="font-bold text-gray-100 text-sm leading-none">CultureFlow</p>
+            <p className="font-bold text-gray-100 text-sm leading-none">Nyatsime Heritage</p>
             <p className="text-xs text-gray-500 mt-0.5 truncate">Cultural Centre</p>
           </div>
         )}

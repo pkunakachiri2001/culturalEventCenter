@@ -472,7 +472,7 @@ export default function FinancePage() {
           open={!!activeReceipt}
           onClose={() => setActiveReceipt(null)}
           title="Official Entry Receipt"
-          description="CultureFlow Financial Transaction Record"
+          description="Nyatsime Heritage Financial Transaction Record"
           size="md"
         >
           <div className="space-y-6">
@@ -481,7 +481,7 @@ export default function FinancePage() {
               className="p-6 rounded-2xl bg-gray-950 border border-gray-800 space-y-4 font-mono text-xs text-gray-300"
             >
               <div className="text-center border-b border-gray-800 pb-4 space-y-1">
-                <h2 className="text-base font-bold text-white uppercase tracking-wider">CultureFlow</h2>
+                <h2 className="text-base font-bold text-white uppercase tracking-wider">Nyatsime Heritage</h2>
                 <p className="text-[10px] text-teal-400 uppercase">Cultural Centre Official Receipt</p>
                 <p className="text-[10px] text-gray-500 font-sans">{formatDateTime(activeReceipt.created_at)}</p>
                 <code className="text-xs font-bold text-teal-300 block pt-1">{activeReceipt.receipt_number}</code>

@@ -69,7 +69,7 @@ export default function LoginPage() {
               <span className="text-white font-bold text-lg">CF</span>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">CultureFlow</h1>
+              <h1 className="text-2xl font-bold text-white">Nyatsime Heritage<br/>and Culture Center</h1>
               <p className="text-teal-400 text-sm">Cultural Centre Management</p>
             </div>
           </div>
@@ -109,7 +109,7 @@ export default function LoginPage() {
               <span className="text-white font-bold">CF</span>
             </div>
             <div>
-              <p className="font-bold text-gray-100">CultureFlow</p>
+              <p className="font-bold text-gray-100">Nyatsime Heritage</p>
               <p className="text-xs text-gray-500">Cultural Centre Management</p>
             </div>
           </div>
@@ -129,7 +129,7 @@ export default function LoginPage() {
               type="email"
               id="email"
               autoComplete="email"
-              placeholder="admin@cultureflow.com"
+              placeholder="admin@nyatsime.com"
               leftIcon={<Mail className="w-4 h-4" />}
               error={errors.email?.message}
               {...register('email')}
@@ -169,7 +169,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-xs text-gray-600 text-center mt-8">
-            CultureFlow v1.0 — Internal use only
+            Nyatsime Heritage v1.0 — Internal use only
           </p>
         </div>
       </div>

@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'CultureFlow',
-        short_name: 'CultureFlow',
+        name: 'Nyatsime Heritage',
+        short_name: 'Nyatsime',
         description: 'Cultural Centre Management System',
         theme_color: '#0f766e',
         background_color: '#0f172a',
