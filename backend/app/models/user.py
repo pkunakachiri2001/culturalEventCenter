@@ -1,0 +1,57 @@
+"""
+CultureFlow — User Model
+"""
+
+import uuid
+import enum
+from datetime import datetime
+
+from sqlalchemy import String, Boolean, Enum, DateTime, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import UUID
+
+from app.database import Base
+
+
+class UserRole(str, enum.Enum):
+    admin = "admin"
+    manager = "manager"
+    receptionist = "receptionist"
+    finance_officer = "finance_officer"
+    tour_guide = "tour_guide"
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    full_name: Mapped[str] = mapped_column(String(150), nullable=False)
+    role: Mapped[UserRole] = mapped_column(
+        Enum(UserRole, name="userrole"), nullable=False, default=UserRole.receptionist
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    # ── Relationships ────────────────────────────────────────────────────
+    visits: Mapped[list["Visit"]] = relationship("Visit", back_populates="created_by_user", foreign_keys="Visit.created_by")  # noqa: F821
+    bookings: Mapped[list["Booking"]] = relationship("Booking", back_populates="created_by_user", foreign_keys="Booking.created_by")  # noqa: F821
+    payments: Mapped[list["Payment"]] = relationship("Payment", back_populates="created_by_user")  # noqa: F821
+    digitized_records: Mapped[list["DigitizedRecord"]] = relationship("DigitizedRecord", back_populates="created_by_user")  # noqa: F821
+    audit_logs: Mapped[list["AuditLog"]] = relationship("AuditLog", back_populates="user")  # noqa: F821
+
+    def __repr__(self) -> str:
+        return f"<User {self.email} [{self.role}]>"
