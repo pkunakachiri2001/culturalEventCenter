@@ -23,10 +23,10 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # ── Database ──────────────────────────────────────────────────────────
-    DATABASE_URL: str  # required — must be set in .env
+    DATABASE_URL: str = "sqlite+aiosqlite:///cultureflow.db"
 
     # ── Security ──────────────────────────────────────────────────────────
-    SECRET_KEY: str  # required — generate with: openssl rand -hex 32
+    SECRET_KEY: str = "cultureflow_default_secret_key_32bytes_min_length"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7

@@ -54,9 +54,14 @@ async def lifespan(app: FastAPI):
     """Startup / shutdown lifecycle hook."""
     logger.info("🚀 CultureFlow API starting up...")
 
-    # Create upload directory
+    # Create upload directory (fall back to /tmp on serverless read-only filesystems)
     upload_path = Path(settings.UPLOAD_DIR)
-    upload_path.mkdir(parents=True, exist_ok=True)
+    try:
+        upload_path.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        import tempfile
+        upload_path = Path(tempfile.gettempdir()) / "uploads"
+        upload_path.mkdir(parents=True, exist_ok=True)
     logger.info("Upload directory ready: %s", upload_path.resolve())
 
     # Initialise database (create tables if they don't exist)
@@ -94,9 +99,15 @@ app.add_middleware(
 
 
 # ── Static Files (uploaded images) ───────────────────────────────────────────
-upload_path = Path(settings.UPLOAD_DIR)
-upload_path.mkdir(parents=True, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=str(upload_path)), name="uploads")
+try:
+    upload_path = Path(settings.UPLOAD_DIR)
+    upload_path.mkdir(parents=True, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=str(upload_path)), name="uploads")
+except Exception:
+    import tempfile
+    upload_path = Path(tempfile.gettempdir()) / "uploads"
+    upload_path.mkdir(parents=True, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=str(upload_path)), name="uploads")
 
 
 # ── Routers ───────────────────────────────────────────────────────────────────

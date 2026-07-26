@@ -21,13 +21,18 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 # ── Engine ────────────────────────────────────────────────────────────────────
-db_url = settings.DATABASE_URL
+db_url = settings.DATABASE_URL or "sqlite+aiosqlite:///cultureflow.db"
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
 elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+asyncpg://"):
     db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 is_sqlite = db_url.startswith("sqlite")
+if is_sqlite:
+    import tempfile
+    from pathlib import Path
+    tmp_db = Path(tempfile.gettempdir()) / "cultureflow.db"
+    db_url = f"sqlite+aiosqlite:///{tmp_db}"
 
 engine_kwargs = {
     "echo": settings.DEBUG,
