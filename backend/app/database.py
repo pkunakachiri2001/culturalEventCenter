@@ -135,10 +135,8 @@ async def init_db() -> None:
 
     # Seed Admin User
     from app.models.user import User, UserRole
+    from app.utils.security import hash_password
     from sqlalchemy import select
-    from passlib.context import CryptContext
-
-    pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     try:
         async with AsyncSessionLocal() as session:
@@ -149,7 +147,7 @@ async def init_db() -> None:
             if not existing:
                 admin = User(
                     email=settings.ADMIN_EMAIL,
-                    password_hash=pwd_ctx.hash(settings.ADMIN_PASSWORD),
+                    password_hash=hash_password(settings.ADMIN_PASSWORD),
                     full_name=settings.ADMIN_FULL_NAME,
                     role=UserRole.admin,
                     is_active=True,
