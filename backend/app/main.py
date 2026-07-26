@@ -76,9 +76,9 @@ app = FastAPI(
     title="CultureFlow API",
     description="Cultural Centre Management System — Backend API",
     version="1.0.0",
-    docs_url="/api/docs" if settings.DEBUG else None,
-    redoc_url="/api/redoc" if settings.DEBUG else None,
-    openapi_url="/api/openapi.json" if settings.DEBUG else None,
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
     lifespan=lifespan,
 )
 
