@@ -23,10 +23,17 @@ settings = get_settings()
 # ── Engine ────────────────────────────────────────────────────────────────────
 db_url = settings.DATABASE_URL or "sqlite+aiosqlite:///cultureflow.db"
 
+import urllib.parse
+parsed_url = urllib.parse.urlsplit(db_url)
+query_params = urllib.parse.parse_qs(parsed_url.query)
+
 requires_ssl = False
-if "sslmode=require" in db_url:
+if 'sslmode' in query_params:
     requires_ssl = True
-    db_url = db_url.replace("?sslmode=require", "").replace("&sslmode=require", "")
+    del query_params['sslmode']
+
+new_query = urllib.parse.urlencode(query_params, doseq=True)
+db_url = urllib.parse.urlunsplit((parsed_url.scheme, parsed_url.netloc, parsed_url.path, new_query, parsed_url.fragment))
 
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
