@@ -63,15 +63,7 @@ async def startup_event():
         upload_path = Path(tempfile.gettempdir()) / "uploads"
         upload_path.mkdir(parents=True, exist_ok=True)
     logger.info("Upload directory ready: %s", upload_path.resolve())
-
-    # Initialise database (create tables if they don't exist)
-    await init_db()
-    logger.info("Database initialised.")
-
-    # Seed default admin user if not present
-    await seed_admin()
     logger.info("✅ CultureFlow API ready.")
-
 
 # ── App Instance ──────────────────────────────────────────────────────────────
 app = FastAPI(
@@ -141,31 +133,4 @@ async def server_error_handler(request: Request, exc):
     )
 
 
-# ── Admin Seed ────────────────────────────────────────────────────────────────
-async def seed_admin() -> None:
-    """Create the initial admin user on first launch if one doesn't exist."""
-    from app.database import AsyncSessionLocal
-    from app.models.user import User, UserRole
-    from sqlalchemy import select
-    from passlib.context import CryptContext
 
-    pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            select(User).where(User.email == settings.ADMIN_EMAIL)
-        )
-        existing = result.scalar_one_or_none()
-        if existing:
-            return
-
-        admin = User(
-            email=settings.ADMIN_EMAIL,
-            password_hash=pwd_ctx.hash(settings.ADMIN_PASSWORD),
-            full_name=settings.ADMIN_FULL_NAME,
-            role=UserRole.admin,
-            is_active=True,
-        )
-        session.add(admin)
-        await session.commit()
-        logger.info("Default admin user created: %s", settings.ADMIN_EMAIL)

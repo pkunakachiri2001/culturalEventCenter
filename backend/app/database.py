@@ -65,12 +65,19 @@ class Base(DeclarativeBase):
     pass
 
 
+_db_initialized = False
+
 # ── Dependency ────────────────────────────────────────────────────────────────
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     FastAPI dependency that provides an async database session.
     Automatically commits on success, rolls back on exception.
     """
+    global _db_initialized
+    if not _db_initialized:
+        await init_db()
+        _db_initialized = True
+
     async with AsyncSessionLocal() as session:
         try:
             yield session
@@ -97,9 +104,32 @@ async def check_database_connection() -> bool:
 # ── Init DB ───────────────────────────────────────────────────────────────────
 async def init_db() -> None:
     """
-    Create all tables if they don't exist.
-    In production, prefer running Alembic migrations instead.
+    Create all tables if they don't exist and seed default admin user.
     """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created / verified.")
+
+    # Seed Admin User
+    from app.models.user import User, UserRole
+    from sqlalchemy import select
+    from passlib.context import CryptContext
+
+    pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(User).where(User.email == settings.ADMIN_EMAIL)
+        )
+        existing = result.scalar_one_or_none()
+        if not existing:
+            admin = User(
+                email=settings.ADMIN_EMAIL,
+                password_hash=pwd_ctx.hash(settings.ADMIN_PASSWORD),
+                full_name=settings.ADMIN_FULL_NAME,
+                role=UserRole.admin,
+                is_active=True,
+            )
+            session.add(admin)
+            await session.commit()
+            logger.info("Default admin user created: %s", settings.ADMIN_EMAIL)
