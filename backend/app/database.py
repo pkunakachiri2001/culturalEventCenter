@@ -125,18 +125,27 @@ async def check_database_connection() -> bool:
 async def init_db() -> None:
     """
     Create all tables if they don't exist and seed default admin user.
+    Idempotent: safe to call multiple times even if schema already exists.
     """
     # Ensure all ORM models are registered in Base.metadata before create_all
     import app.models  # noqa: F401
 
     try:
         async with engine.begin() as conn:
+            # checkfirst=True skips existing tables, but SQLAlchemy still attempts
+            # to create associated indexes which may already exist — we catch that below.
             await conn.run_sync(Base.metadata.create_all, checkfirst=True)
         logger.info("Database tables created / verified.")
     except Exception as e:
-        logger.error("Database table creation failed: %s", e)
-        raise e
-    # Seed Admin User
+        error_msg = str(e).lower()
+        # "already exists" means the schema (tables/indexes) is already in place — that's fine.
+        if "already exists" in error_msg:
+            logger.info("Database schema already exists — skipping DDL. (%s)", type(e).__name__)
+        else:
+            logger.error("Database table creation failed with unexpected error: %s", e)
+            raise
+
+    # ── Seed Admin User ───────────────────────────────────────────────────────
     from app.models.user import User, UserRole
     from app.utils.security import hash_password
     from sqlalchemy import select
@@ -158,5 +167,8 @@ async def init_db() -> None:
                 session.add(admin)
                 await session.commit()
                 logger.info("Default admin user created: %s", settings.ADMIN_EMAIL)
+            else:
+                logger.info("Admin user already exists: %s", settings.ADMIN_EMAIL)
     except Exception as e:
-        logger.warning("Admin user seed skipped or failed: %s", e)
+        logger.error("Admin user seed failed: %s", e)
+        raise
