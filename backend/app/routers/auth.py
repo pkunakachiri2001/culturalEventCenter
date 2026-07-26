@@ -31,43 +31,53 @@ from app.utils.security import (
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login")
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
 ):
     """Authenticate user with email and password, return JWT tokens."""
-    result = await db.execute(select(User).where(User.email == form_data.username))
-    user = result.scalar_one_or_none()
+    try:
+        result = await db.execute(select(User).where(User.email == form_data.username))
+        user = result.scalar_one_or_none()
 
-    if not user or not verify_password(form_data.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
+        if not user or not verify_password(form_data.password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User account is inactive",
+            )
+
+        # Update last login timestamp
+        user.last_login = datetime.now(timezone.utc)
+        await db.commit()
+
+        access_token = create_access_token(
+            subject=user.id,
+            claims={"email": user.email, "role": user.role.value},
         )
+        refresh_token = create_refresh_token(subject=user.id)
 
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is inactive",
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer",
         )
-
-    # Update last login timestamp
-    user.last_login = datetime.now(timezone.utc)
-    await db.commit()
-
-    access_token = create_access_token(
-        subject=user.id,
-        claims={"email": user.email, "role": user.role.value},
-    )
-    refresh_token = create_refresh_token(subject=user.id)
-
-    return TokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        token_type="bearer",
-    )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        import traceback
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(exc), "traceback": traceback.format_exc()}
+        )
 
 
 @router.get("/me", response_model=UserOut)
