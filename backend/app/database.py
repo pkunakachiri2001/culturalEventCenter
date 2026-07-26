@@ -126,6 +126,9 @@ async def init_db() -> None:
     """
     Create all tables if they don't exist and seed default admin user.
     """
+    # Ensure all ORM models are registered in Base.metadata before create_all
+    import app.models  # noqa: F401
+
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
