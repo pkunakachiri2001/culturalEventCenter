@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # ── AI ────────────────────────────────────────────────────────────────
+    GROQ_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
 
     # ── OCR ───────────────────────────────────────────────────────────────

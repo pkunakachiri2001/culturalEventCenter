@@ -27,7 +27,7 @@ from app.schemas.digitization import (
 from app.schemas.visitor import VisitOut
 from app.services.ocr_service import (
     calculate_overall_confidence,
-    process_image_with_gemini,
+    process_image_with_ai,
     run_tesseract_ocr,
 )
 from app.utils.deps import get_current_active_user, get_db
@@ -42,7 +42,7 @@ async def upload_and_digitize(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Upload handwritten register page, run OCR + Gemini extraction, and store record for review."""
+    """Upload handwritten register page, run OCR + Groq AI extraction, and store record for review."""
     filename = file.filename or f"scan_{uuid.uuid4().hex[:6]}.jpg"
     ext = Path(filename).suffix.lower()
 
@@ -68,8 +68,8 @@ async def upload_and_digitize(
     # Step 1: Run OCR text extraction
     raw_ocr_text = run_tesseract_ocr(file_path)
 
-    # Step 2: Gemini structured field extraction
-    extracted_fields = await process_image_with_gemini(file_path, raw_ocr_text)
+    # Step 2: Groq AI structured field extraction
+    extracted_fields = await process_image_with_ai(file_path, raw_ocr_text)
 
     # Step 3: Compute confidence score
     overall_confidence = calculate_overall_confidence(extracted_fields)
