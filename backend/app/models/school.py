@@ -43,7 +43,7 @@ class School(Base):
 
     # ── Table Indexes ────────────────────────────────────────────────────
     __table_args__ = (
-        Index("ix_schools_name_province", "name", "province", postgresql_if_not_exists=True),
+        Index("ix_schools_name_province", "name", "province"),
     )
 
     def __repr__(self) -> str:

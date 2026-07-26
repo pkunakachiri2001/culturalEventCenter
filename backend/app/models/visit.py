@@ -87,9 +87,9 @@ class Visit(Base):
     )
 
     __table_args__ = (
-        Index("ix_visits_visit_date", "visit_date", postgresql_if_not_exists=True),
-        Index("ix_visits_school_id", "school_id", postgresql_if_not_exists=True),
-        Index("ix_visits_created_by", "created_by", postgresql_if_not_exists=True),
+        Index("ix_visits_visit_date", "visit_date"),
+        Index("ix_visits_school_id", "school_id"),
+        Index("ix_visits_created_by", "created_by"),
     )
 
     @property

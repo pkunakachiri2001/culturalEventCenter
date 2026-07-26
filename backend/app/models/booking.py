@@ -78,7 +78,7 @@ class Booking(Base):
     )
 
     __table_args__ = (
-        Index("ix_bookings_date_status", "booking_date", "status", postgresql_if_not_exists=True),
+        Index("ix_bookings_date_status", "booking_date", "status"),
     )
 
     def __repr__(self) -> str:

@@ -49,8 +49,8 @@ class Visitor(Base):
     )
 
     __table_args__ = (
-        Index("ix_visitors_phone", "phone", postgresql_if_not_exists=True),
-        Index("ix_visitors_email", "email", postgresql_if_not_exists=True),
+        Index("ix_visitors_phone", "phone"),
+        Index("ix_visitors_email", "email"),
     )
 
     def __repr__(self) -> str:
