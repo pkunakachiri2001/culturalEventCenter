@@ -32,3 +32,20 @@ async def health_check() -> HealthResponse:
         environment=settings.APP_ENV,
         timestamp=datetime.now(timezone.utc),
     )
+
+
+@router.get("/health/init", summary="Manual DB Init & Debugging")
+async def manual_init_db():
+    """Manually trigger DB init and capture exact exceptions for Vercel debugging."""
+    from app.database import init_db
+    try:
+        await init_db()
+        return {"status": "ok", "message": "Database and Admin User initialized successfully!"}
+    except Exception as e:
+        import traceback
+        return {
+            "status": "error",
+            "error_type": type(e).__name__,
+            "error_msg": str(e),
+            "traceback": traceback.format_exc(),
+        }
