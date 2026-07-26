@@ -36,13 +36,9 @@ export const useAuthStore = create<AuthState>()(
       login: async (credentials) => {
         set({ isLoading: true })
         try {
-          // FastAPI OAuth2 form format (application/x-www-form-urlencoded)
-          const formData = new URLSearchParams()
-          formData.append('username', credentials.email)
-          formData.append('password', credentials.password)
-
-          const { data: tokens } = await api.post<AuthTokens>('/api/auth/login', formData, {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          const { data: tokens } = await api.post<AuthTokens>('/api/auth/login', {
+            email: credentials.email,
+            password: credentials.password,
           })
 
           localStorage.setItem('access_token', tokens.access_token)

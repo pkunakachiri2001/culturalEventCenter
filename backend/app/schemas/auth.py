@@ -12,6 +12,12 @@ from app.models.user import UserRole
 from app.schemas.common import OrmBase
 
 
+class LoginRequest(BaseModel):
+    email: str | None = None
+    username: str | None = None
+    password: str
+
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str

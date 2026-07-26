@@ -31,53 +31,45 @@ from app.utils.security import (
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 
-@router.post("/login")
+@router.post("/login", response_model=TokenResponse)
 async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    payload: LoginRequest,
     db: AsyncSession = Depends(get_db),
 ):
     """Authenticate user with email and password, return JWT tokens."""
-    try:
-        result = await db.execute(select(User).where(User.email == form_data.username))
-        user = result.scalar_one_or_none()
+    email_to_check = (payload.email or payload.username or "").strip().lower()
 
-        if not user or not verify_password(form_data.password, user.password_hash):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+    result = await db.execute(select(User).where(User.email == email_to_check))
+    user = result.scalar_one_or_none()
 
-        if not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User account is inactive",
-            )
-
-        # Update last login timestamp
-        user.last_login = datetime.now(timezone.utc)
-        await db.commit()
-
-        access_token = create_access_token(
-            subject=user.id,
-            claims={"email": user.email, "role": user.role.value},
+    if not user or not verify_password(payload.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
-        refresh_token = create_refresh_token(subject=user.id)
 
-        return TokenResponse(
-            access_token=access_token,
-            refresh_token=refresh_token,
-            token_type="bearer",
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is inactive",
         )
-    except HTTPException:
-        raise
-    except Exception as exc:
-        import traceback
-        from fastapi.responses import JSONResponse
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(exc), "traceback": traceback.format_exc()}
-        )
+
+    # Update last login timestamp
+    user.last_login = datetime.now(timezone.utc)
+    await db.commit()
+
+    access_token = create_access_token(
+        subject=user.id,
+        claims={"email": user.email, "role": user.role.value},
+    )
+    refresh_token = create_refresh_token(subject=user.id)
+
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer",
+    )
 
 
 @router.get("/me", response_model=UserOut)
