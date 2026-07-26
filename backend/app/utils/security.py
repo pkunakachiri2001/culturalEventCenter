@@ -11,6 +11,10 @@ import hashlib
 import hmac
 import secrets
 
+from app.config import get_settings
+
+settings = get_settings()
+
 
 def hash_password(password: str) -> str:
     """Hash a raw password using standard library PBKDF2-HMAC-SHA256."""
