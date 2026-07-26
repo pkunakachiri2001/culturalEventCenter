@@ -28,7 +28,7 @@ from app.utils.security import (
     verify_password,
 )
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 
 @router.post("/login", response_model=TokenResponse)
