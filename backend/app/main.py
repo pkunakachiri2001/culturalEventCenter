@@ -37,6 +37,17 @@ logger = logging.getLogger("cultureflow")
 settings = get_settings()
 
 
+# ── App Instance ──────────────────────────────────────────────────────────────
+app = FastAPI(
+    title="CultureFlow API",
+    description="Cultural Centre Management System — Backend API",
+    version="1.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
+)
+
+
 # ── Startup ───────────────────────────────────────────────────────────────────
 @app.on_event("startup")
 async def startup_event():
@@ -53,16 +64,6 @@ async def startup_event():
         upload_path.mkdir(parents=True, exist_ok=True)
     logger.info("Upload directory ready: %s", upload_path.resolve())
     logger.info("✅ CultureFlow API ready.")
-
-# ── App Instance ──────────────────────────────────────────────────────────────
-app = FastAPI(
-    title="CultureFlow API",
-    description="Cultural Centre Management System — Backend API",
-    version="1.0.0",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json",
-)
 
 
 # ── Middleware ────────────────────────────────────────────────────────────────
