@@ -125,25 +125,45 @@ async def check_database_connection() -> bool:
 async def init_db() -> None:
     """
     Create all tables if they don't exist and seed default admin user.
-    Idempotent: safe to call multiple times even if schema already exists.
+    Idempotent: creates each table independently so a partial prior run
+    does not prevent missing tables from being created.
     """
     # Ensure all ORM models are registered in Base.metadata before create_all
     import app.models  # noqa: F401
 
-    try:
-        async with engine.begin() as conn:
-            # checkfirst=True skips existing tables, but SQLAlchemy still attempts
-            # to create associated indexes which may already exist — we catch that below.
-            await conn.run_sync(Base.metadata.create_all, checkfirst=True)
-        logger.info("Database tables created / verified.")
-    except Exception as e:
-        error_msg = str(e).lower()
-        # "already exists" means the schema (tables/indexes) is already in place — that's fine.
-        if "already exists" in error_msg:
-            logger.info("Database schema already exists — skipping DDL. (%s)", type(e).__name__)
-        else:
-            logger.error("Database table creation failed with unexpected error: %s", e)
-            raise
+    # ── Create tables one-by-one ─────────────────────────────────────────────
+    # Using per-table create(checkfirst=True) so that:
+    # - Existing tables (and their indexes) are skipped entirely
+    # - Missing tables are created fresh with their indexes
+    # - A failure on one table does not abort creation of unrelated tables
+    created = []
+    skipped = []
+    failed = []
+
+    async with engine.begin() as conn:
+        for table in Base.metadata.sorted_tables:
+            try:
+                await conn.run_sync(table.create, checkfirst=True)
+                created.append(table.name)
+            except Exception as e:
+                error_msg = str(e).lower()
+                if "already exists" in error_msg:
+                    skipped.append(table.name)
+                else:
+                    failed.append((table.name, str(e)))
+                    logger.error("Failed to create table %s: %s", table.name, e)
+
+    if failed:
+        raise RuntimeError(
+            f"Database init failed for tables: {[f[0] for f in failed]}. "
+            f"Errors: {[f[1] for f in failed]}"
+        )
+
+    logger.info(
+        "DB schema: created=%s, already_existed=%s",
+        created or "none",
+        skipped or "none",
+    )
 
     # ── Seed Admin User ───────────────────────────────────────────────────────
     from app.models.user import User, UserRole
