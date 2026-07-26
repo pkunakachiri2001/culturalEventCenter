@@ -140,18 +140,18 @@ async def init_db() -> None:
     skipped = []
     failed = []
 
-    async with engine.begin() as conn:
-        for table in Base.metadata.sorted_tables:
-            try:
+    for table in Base.metadata.sorted_tables:
+        try:
+            async with engine.begin() as conn:  # fresh transaction per table
                 await conn.run_sync(table.create, checkfirst=True)
-                created.append(table.name)
-            except Exception as e:
-                error_msg = str(e).lower()
-                if "already exists" in error_msg:
-                    skipped.append(table.name)
-                else:
-                    failed.append((table.name, str(e)))
-                    logger.error("Failed to create table %s: %s", table.name, e)
+            created.append(table.name)
+        except Exception as e:
+            error_msg = str(e).lower()
+            if "already exists" in error_msg:
+                skipped.append(table.name)
+            else:
+                failed.append((table.name, str(e)))
+                logger.error("Failed to create table %s: %s", table.name, e)
 
     if failed:
         raise RuntimeError(
