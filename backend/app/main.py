@@ -27,18 +27,7 @@ from app.routers.digitization import router as digitization_router
 from app.routers.search import router as search_router
 from app.routers.admin import router as admin_router
 
-# ... inside main.py router section
-app.include_router(health_router)
-app.include_router(auth_router)
-app.include_router(dashboard_router)
-app.include_router(visitors_router)
-app.include_router(schools_router)
-app.include_router(bookings_router)
-app.include_router(finance_router)
-app.include_router(reports_router)
-app.include_router(digitization_router)
-app.include_router(search_router)
-app.include_router(admin_router)
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
