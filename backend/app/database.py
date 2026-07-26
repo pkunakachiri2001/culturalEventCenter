@@ -22,6 +22,12 @@ settings = get_settings()
 
 # ── Engine ────────────────────────────────────────────────────────────────────
 db_url = settings.DATABASE_URL or "sqlite+aiosqlite:///cultureflow.db"
+
+requires_ssl = False
+if "sslmode=require" in db_url:
+    requires_ssl = True
+    db_url = db_url.replace("?sslmode=require", "").replace("&sslmode=require", "")
+
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
 elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+asyncpg://"):
@@ -39,12 +45,17 @@ engine_kwargs = {
 }
 
 if not is_sqlite:
+    connect_args = {"server_settings": {"application_name": "cultureflow"}}
+    if requires_ssl:
+        # asyncpg requires ssl=True rather than sslmode=require in the connection string
+        connect_args["ssl"] = True
+
     engine_kwargs.update({
         "pool_size": 5,
         "max_overflow": 10,
         "pool_pre_ping": True,
         "pool_recycle": 300,
-        "connect_args": {"server_settings": {"application_name": "cultureflow"}},
+        "connect_args": connect_args,
     })
 
 engine = create_async_engine(db_url, **engine_kwargs)
