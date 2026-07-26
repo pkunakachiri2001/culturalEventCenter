@@ -28,9 +28,11 @@ parsed_url = urllib.parse.urlsplit(db_url)
 query_params = urllib.parse.parse_qs(parsed_url.query)
 
 requires_ssl = False
-if 'sslmode' in query_params:
-    requires_ssl = True
-    del query_params['sslmode']
+for param in ['sslmode', 'channel_binding', 'options']:
+    if param in query_params:
+        if param == 'sslmode' and query_params[param][0] == 'require':
+            requires_ssl = True
+        del query_params[param]
 
 new_query = urllib.parse.urlencode(query_params, doseq=True)
 db_url = urllib.parse.urlunsplit((parsed_url.scheme, parsed_url.netloc, parsed_url.path, new_query, parsed_url.fragment))
