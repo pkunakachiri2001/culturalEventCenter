@@ -134,8 +134,8 @@ async def init_db() -> None:
             await conn.run_sync(Base.metadata.create_all)
         logger.info("Database tables created / verified.")
     except Exception as e:
-        logger.warning("Database table creation skipped (likely already exists or race condition): %s", e)
-
+        logger.error("Database table creation failed: %s", e)
+        raise e
     # Seed Admin User
     from app.models.user import User, UserRole
     from app.utils.security import hash_password
