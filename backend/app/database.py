@@ -126,9 +126,12 @@ async def init_db() -> None:
     """
     Create all tables if they don't exist and seed default admin user.
     """
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database tables created / verified.")
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables created / verified.")
+    except Exception as e:
+        logger.warning("Database table creation skipped (likely already exists or race condition): %s", e)
 
     # Seed Admin User
     from app.models.user import User, UserRole
@@ -137,19 +140,22 @@ async def init_db() -> None:
 
     pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            select(User).where(User.email == settings.ADMIN_EMAIL)
-        )
-        existing = result.scalar_one_or_none()
-        if not existing:
-            admin = User(
-                email=settings.ADMIN_EMAIL,
-                password_hash=pwd_ctx.hash(settings.ADMIN_PASSWORD),
-                full_name=settings.ADMIN_FULL_NAME,
-                role=UserRole.admin,
-                is_active=True,
+    try:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(User).where(User.email == settings.ADMIN_EMAIL)
             )
-            session.add(admin)
-            await session.commit()
-            logger.info("Default admin user created: %s", settings.ADMIN_EMAIL)
+            existing = result.scalar_one_or_none()
+            if not existing:
+                admin = User(
+                    email=settings.ADMIN_EMAIL,
+                    password_hash=pwd_ctx.hash(settings.ADMIN_PASSWORD),
+                    full_name=settings.ADMIN_FULL_NAME,
+                    role=UserRole.admin,
+                    is_active=True,
+                )
+                session.add(admin)
+                await session.commit()
+                logger.info("Default admin user created: %s", settings.ADMIN_EMAIL)
+    except Exception as e:
+        logger.warning("Admin user seed skipped or failed: %s", e)
