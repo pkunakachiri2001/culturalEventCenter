@@ -131,7 +131,7 @@ async def init_db() -> None:
 
     try:
         async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+            await conn.run_sync(Base.metadata.create_all, checkfirst=True)
         logger.info("Database tables created / verified.")
     except Exception as e:
         logger.error("Database table creation failed: %s", e)
