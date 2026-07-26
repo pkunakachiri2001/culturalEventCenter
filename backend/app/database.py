@@ -21,17 +21,28 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 # ── Engine ────────────────────────────────────────────────────────────────────
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    pool_size=5,
-    max_overflow=10,
-    pool_pre_ping=True,        # Validates connections before use (important for Neon)
-    pool_recycle=300,          # Recycle connections every 5 min (Neon cold starts)
-    connect_args={
-        "server_settings": {"application_name": "cultureflow"},
-    },
-)
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+asyncpg://"):
+    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+is_sqlite = db_url.startswith("sqlite")
+
+engine_kwargs = {
+    "echo": settings.DEBUG,
+}
+
+if not is_sqlite:
+    engine_kwargs.update({
+        "pool_size": 5,
+        "max_overflow": 10,
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+        "connect_args": {"server_settings": {"application_name": "cultureflow"}},
+    })
+
+engine = create_async_engine(db_url, **engine_kwargs)
 
 # ── Session Factory ───────────────────────────────────────────────────────────
 AsyncSessionLocal = async_sessionmaker(
