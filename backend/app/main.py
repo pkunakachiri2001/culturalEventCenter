@@ -48,15 +48,15 @@ logger = logging.getLogger("cultureflow")
 settings = get_settings()
 
 
-# ── Lifespan ──────────────────────────────────────────────────────────────────
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Startup / shutdown lifecycle hook."""
+# ── Startup ───────────────────────────────────────────────────────────────────
+@app.on_event("startup")
+async def startup_event():
+    """Startup lifecycle hook (using on_event for better serverless ASGI support)."""
     logger.info("🚀 CultureFlow API starting up...")
 
     # Create upload directory (fall back to /tmp on serverless read-only filesystems)
-    upload_path = Path(settings.UPLOAD_DIR)
     try:
+        upload_path = Path(settings.UPLOAD_DIR)
         upload_path.mkdir(parents=True, exist_ok=True)
     except Exception:
         import tempfile
@@ -70,10 +70,7 @@ async def lifespan(app: FastAPI):
 
     # Seed default admin user if not present
     await seed_admin()
-
     logger.info("✅ CultureFlow API ready.")
-    yield
-    logger.info("🛑 CultureFlow API shutting down.")
 
 
 # ── App Instance ──────────────────────────────────────────────────────────────
@@ -84,7 +81,6 @@ app = FastAPI(
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
-    lifespan=lifespan,
 )
 
 
