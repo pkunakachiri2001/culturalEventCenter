@@ -116,10 +116,11 @@ async def not_found_handler(request: Request, exc):
 
 @app.exception_handler(500)
 async def server_error_handler(request: Request, exc):
+    import traceback
     logger.error("Unhandled exception: %s", exc, exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"success": False, "error": "Internal server error"},
+        content={"success": False, "error": str(exc), "traceback": "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))},
     )
 
 
