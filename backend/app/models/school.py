@@ -18,7 +18,7 @@ class School(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
     province: Mapped[str | None] = mapped_column(String(100), nullable=True)
     country: Mapped[str] = mapped_column(String(100), nullable=False, default="Zimbabwe")
     contact_teacher: Mapped[str | None] = mapped_column(String(150), nullable=True)
@@ -43,7 +43,7 @@ class School(Base):
 
     # ── Table Indexes ────────────────────────────────────────────────────
     __table_args__ = (
-        Index("ix_schools_name_province", "name", "province"),
+        Index("ix_schools_name_province", "name", "province", postgresql_if_not_exists=True),
     )
 
     def __repr__(self) -> str:

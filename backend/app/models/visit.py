@@ -46,7 +46,7 @@ class Visit(Base):
     visit_type: Mapped[VisitType] = mapped_column(
         Enum(VisitType, name="visittype"), nullable=False, default=VisitType.individual
     )
-    visit_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    visit_date: Mapped[date] = mapped_column(Date, nullable=False)
     check_in_time: Mapped[time | None] = mapped_column(Time, nullable=True)
     check_out_time: Mapped[time | None] = mapped_column(Time, nullable=True)
     num_students: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -87,9 +87,9 @@ class Visit(Base):
     )
 
     __table_args__ = (
-        Index("ix_visits_visit_date", "visit_date"),
-        Index("ix_visits_school_id", "school_id"),
-        Index("ix_visits_created_by", "created_by"),
+        Index("ix_visits_visit_date", "visit_date", postgresql_if_not_exists=True),
+        Index("ix_visits_school_id", "school_id", postgresql_if_not_exists=True),
+        Index("ix_visits_created_by", "created_by", postgresql_if_not_exists=True),
     )
 
     @property

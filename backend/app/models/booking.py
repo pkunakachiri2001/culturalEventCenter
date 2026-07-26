@@ -37,14 +37,13 @@ class Booking(Base):
     created_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    booking_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    booking_date: Mapped[date] = mapped_column(Date, nullable=False)
     start_time: Mapped[time | None] = mapped_column(Time, nullable=True)
     end_time: Mapped[time | None] = mapped_column(Time, nullable=True)
     status: Mapped[BookingStatus] = mapped_column(
         Enum(BookingStatus, name="bookingstatus"),
         nullable=False,
         default=BookingStatus.pending,
-        index=True,
     )
     contact_name: Mapped[str] = mapped_column(String(150), nullable=False)
     contact_phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
@@ -79,7 +78,7 @@ class Booking(Base):
     )
 
     __table_args__ = (
-        Index("ix_bookings_date_status", "booking_date", "status"),
+        Index("ix_bookings_date_status", "booking_date", "status", postgresql_if_not_exists=True),
     )
 
     def __repr__(self) -> str:

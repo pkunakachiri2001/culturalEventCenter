@@ -97,7 +97,7 @@ class Payment(Base):
     )
 
     __table_args__ = (
-        Index("ix_payments_created_at", "created_at"),
+        Index("ix_payments_created_at", "created_at", postgresql_if_not_exists=True),
     )
 
     def __repr__(self) -> str:

@@ -44,9 +44,9 @@ class AuditLog(Base):
     user: Mapped["User | None"] = relationship("User", back_populates="audit_logs")  # noqa: F821
 
     __table_args__ = (
-        Index("ix_audit_logs_user_id", "user_id"),
-        Index("ix_audit_logs_entity", "entity_type", "entity_id"),
-        Index("ix_audit_logs_created_at", "created_at"),
+        Index("ix_audit_logs_user_id", "user_id", postgresql_if_not_exists=True),
+        Index("ix_audit_logs_entity", "entity_type", "entity_id", postgresql_if_not_exists=True),
+        Index("ix_audit_logs_created_at", "created_at", postgresql_if_not_exists=True),
     )
 
     def __repr__(self) -> str:
