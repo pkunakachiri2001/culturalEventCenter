@@ -28,21 +28,65 @@ from app.utils.security import (
     verify_password,
 )
 
-router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 
 @router.post("/login", response_model=TokenResponse)
 async def login(
-    payload: LoginRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    """Authenticate user with email and password, return JWT tokens."""
-    email_to_check = (payload.email or payload.username or "").strip().lower()
+    """Authenticate user with email/username and password. Universal handler for JSON & Form Data."""
+    username = None
+    password = None
+
+    # 1. Try parsing JSON body
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            username = body.get("username") or body.get("email")
+            password = body.get("password")
+        except Exception:
+            pass
+
+    # 2. Try parsing Form Data / URL-encoded body if JSON didn't yield credentials
+    if not username or not password:
+        try:
+            form = await request.form()
+            username = form.get("username") or form.get("email")
+            password = form.get("password")
+        except Exception:
+            pass
+
+    # 3. Fallback: Parse raw body string if needed
+    if not username or not password:
+        try:
+            raw_bytes = await request.body()
+            raw_str = raw_bytes.decode("utf-8")
+            import urllib.parse
+            parsed_form = urllib.parse.parse_qs(raw_str)
+            if "username" in parsed_form:
+                username = parsed_form["username"][0]
+            elif "email" in parsed_form:
+                username = parsed_form["email"][0]
+            if "password" in parsed_form:
+                password = parsed_form["password"][0]
+        except Exception:
+            pass
+
+    if not username or not password:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Missing email/username or password in request body",
+        )
+
+    email_to_check = str(username).strip().lower()
 
     result = await db.execute(select(User).where(User.email == email_to_check))
     user = result.scalar_one_or_none()
 
-    if not user or not verify_password(payload.password, user.password_hash):
+    if not user or not verify_password(password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
