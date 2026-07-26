@@ -20,7 +20,7 @@ from app.schemas.admin import (
 from app.schemas.auth import UserOut
 from app.schemas.common import PaginatedResponse, SuccessResponse
 from app.utils.deps import require_roles, get_db
-from app.utils.security import get_password_hash
+from app.utils.security import hash_password
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Panel"])
 
@@ -86,10 +86,10 @@ async def create_staff_user(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="User with this email already exists")
 
-    hashed_pw = get_password_hash(payload.password)
+    hashed_pw = hash_password(payload.password)
     user = User(
         email=payload.email.lower().strip(),
-        hashed_password=hashed_pw,
+        password_hash=hashed_pw,
         full_name=payload.full_name.strip(),
         phone=payload.phone,
         role=payload.role,
@@ -155,7 +155,7 @@ async def reset_user_password(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    user.hashed_password = get_password_hash(payload.new_password)
+    user.password_hash = hash_password(payload.new_password)
 
     audit = AuditLog(
         user_id=current_user.id,
