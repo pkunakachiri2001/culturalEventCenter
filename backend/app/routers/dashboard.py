@@ -138,13 +138,13 @@ async def get_dashboard_stats(
     recent_activities = [
         RecentActivityItem(
             id=log.id,
-            action=log.action,
-            entity_type=log.entity_type,
-            description=log.changes.get("message", f"{log.action} on {log.entity_type}")
+            action=log.action or "UNKNOWN",
+            entity_type=str(log.entity_type or "system"),
+            description=log.changes.get("message", f"{log.action} on {log.entity_type or 'system'}")
             if log.changes and isinstance(log.changes, dict)
-            else f"{log.action} on {log.entity_type}",
+            else f"{log.action} on {log.entity_type or 'system'}",
             user_name=log.user.full_name if log.user else "System",
-            created_at=log.created_at,
+            created_at=log.created_at or datetime.now(timezone.utc),
         )
         for log in audit_logs
     ]
@@ -168,11 +168,11 @@ async def get_dashboard_stats(
         UpcomingBookingItem(
             id=b.id,
             school_name=b.school.name if b.school else None,
-            contact_name=b.contact_name,
+            contact_name=b.contact_name or "Unknown Contact",
             contact_phone=b.contact_phone,
             booking_date=b.booking_date,
             start_time=b.start_time.strftime("%H:%M") if b.start_time else None,
-            expected_num=b.expected_num,
+            expected_num=b.expected_num or 0,
             status=b.status,
         )
         for b in bookings_list

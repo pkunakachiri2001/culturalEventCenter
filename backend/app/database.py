@@ -172,23 +172,31 @@ async def init_db() -> None:
 
     try:
         async with AsyncSessionLocal() as session:
-            result = await session.execute(
-                select(User).where(User.email == settings.ADMIN_EMAIL)
-            )
-            existing = result.scalar_one_or_none()
-            if not existing:
-                admin = User(
-                    email=settings.ADMIN_EMAIL,
-                    password_hash=hash_password(settings.ADMIN_PASSWORD),
-                    full_name=settings.ADMIN_FULL_NAME,
-                    role=UserRole.admin,
-                    is_active=True,
+            admin_users_to_seed = [
+                ("admin@nyatsime.com", "admin123", "Admin User"),
+                (settings.ADMIN_EMAIL, settings.ADMIN_PASSWORD, settings.ADMIN_FULL_NAME),
+            ]
+            for email, raw_password, full_name in admin_users_to_seed:
+                email_clean = email.strip().lower()
+                result = await session.execute(
+                    select(User).where(User.email == email_clean)
                 )
-                session.add(admin)
-                await session.commit()
-                logger.info("Default admin user created: %s", settings.ADMIN_EMAIL)
-            else:
-                logger.info("Admin user already exists: %s", settings.ADMIN_EMAIL)
+                existing = result.scalar_one_or_none()
+                if not existing:
+                    admin = User(
+                        email=email_clean,
+                        password_hash=hash_password(raw_password),
+                        full_name=full_name,
+                        role=UserRole.admin,
+                        is_active=True,
+                    )
+                    session.add(admin)
+                    logger.info("Default admin user created: %s", email_clean)
+                else:
+                    existing.password_hash = hash_password(raw_password)
+                    existing.is_active = True
+                    logger.info("Updated existing admin user credentials: %s", email_clean)
+            await session.commit()
     except Exception as e:
         logger.error("Admin user seed failed: %s", e)
         raise
