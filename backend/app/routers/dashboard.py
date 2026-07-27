@@ -94,7 +94,7 @@ async def get_dashboard_stats(
     # 7. Pending Digitization Count
     pending_dig_res = await db.execute(
         select(func.count(DigitizedRecord.id)).where(
-            DigitizedRecord.status == DigitizationStatus.pending
+            DigitizedRecord.status == DigitizationStatus.needs_review
         )
     )
     pending_digitization_count = int(pending_dig_res.scalar_one())
