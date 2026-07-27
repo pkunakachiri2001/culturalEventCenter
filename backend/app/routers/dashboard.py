@@ -88,9 +88,7 @@ async def get_dashboard_stats(
     upcoming_bookings_count = int(upcoming_bookings_count_res.scalar_one())
 
     # 6. Registered Schools Count
-    schools_count_res = await db.execute(
-        select(func.count(School.id)).where(School.is_active.is_(True))
-    )
+    schools_count_res = await db.execute(select(func.count(School.id)))
     schools_registered_count = int(schools_count_res.scalar_one())
 
     # 7. Pending Digitization Count
@@ -142,8 +140,8 @@ async def get_dashboard_stats(
             id=log.id,
             action=log.action,
             entity_type=log.entity_type,
-            description=log.details.get("message", f"{log.action} on {log.entity_type}")
-            if log.details and isinstance(log.details, dict)
+            description=log.changes.get("message", f"{log.action} on {log.entity_type}")
+            if log.changes and isinstance(log.changes, dict)
             else f"{log.action} on {log.entity_type}",
             user_name=log.user.full_name if log.user else "System",
             created_at=log.created_at,
